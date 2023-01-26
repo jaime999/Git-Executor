@@ -30,7 +30,8 @@ services:
     entrypoint: ["node", "server.js"]
     environment:
       - KAFKA_BITNAMI_SERVER=kafka:9092
-      - TOPIC=prueba-topic
+      - TOPIC_PRODUCER=mensaje-server
+      - TOPIC_CONSUMER=mensaje-consumer
       - HOOK_SECRET=supersecretstring
       - GROUP_ID=group-id
     depends_on:
@@ -44,7 +45,8 @@ services:
     entrypoint: ["node", "consumer.js"]
     environment:
       - KAFKA_BITNAMI_SERVER=kafka:9092
-      - TOPIC=prueba-topic
+      - TOPIC_PRODUCER=mensaje-consumer
+      - TOPIC_CONSUMER=mensaje-server
       - HOOK_SECRET=supersecretstring
       - GROUP_ID=group-id
     depends_on:
