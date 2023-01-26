@@ -10,7 +10,6 @@ const jsonParser = bodyParser.json()
 app.post('/', jsonParser, async (req, res) => {
   await producer.connect()             // ++
   try {
-   console.log(req)
    const responses = await producer.send({
       topic: process.env.TOPIC,
       messages: [{
@@ -22,7 +21,6 @@ app.post('/', jsonParser, async (req, res) => {
          })
       }]
    })
-   console.log('Published message', { responses })
 } catch (error) {
    console.error('Error publishing message', error)
 }
@@ -32,3 +30,37 @@ app.post('/', jsonParser, async (req, res) => {
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`)
 })
+
+// const consumer = kafka.consumer({
+//    groupId: process.env.GROUP_ID
+// })
+
+// const main = async () => {
+//    await consumer.connect()
+//    await consumer.subscribe({
+//       topic: process.env.TOPIC,
+//       fromBeginning: true
+//    })
+//    await consumer.run({
+//       eachMessage: async ({ topic, partition, message }) => {
+//          console.log('Received message', {
+//             topic,
+//             partition,
+//             value: message.value.toString()
+//          })
+
+//          // console.log(message)
+         
+//       }
+//    })
+// }
+
+// main().catch(async error => {
+//    console.error(error)
+//    try {
+//       await consumer.disconnect()
+//    } catch (e) {
+//       console.error('Failed to gracefully disconnect consumer', e)
+//    }
+//    process.exit(1)
+// })
