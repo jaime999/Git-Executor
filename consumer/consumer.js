@@ -1,3 +1,4 @@
+const { exec } = require('node:child_process');
 require('dotenv').config()
 const kafka = require('./kafka')
 const consumer = kafka.consumer({
@@ -13,14 +14,23 @@ const main = async () => {
    })
    await consumer.run({
       eachMessage: async ({ topic, partition, message }) => {
-         // console.log('Received message', {
-         //    topic,
-         //    partition,
-         //    key: message.key.toString(),
-         //    value: message.value.toString()
-         // })
+         const messageValue = message.value.toString()
+         JSONmessage = JSON.parse(messageValue);
+         exec(`git clone https://github.com/jaime999/${JSONmessage.repository}.git`, (error, stdout, stderr) => {
+            if (error) {
+              console.error(`exec error: ${error}`);
+              return;
+            }
+            console.log(`stdout: ${stdout}`);
+            console.error(`stderr: ${stderr}`);
+          });
 
-         console.log(message)
+         console.log('Received message', {
+            topic,
+            partition,
+            // key: message.key.toString(),
+            value: message.value.toString()
+         })
       }
    })
 }
