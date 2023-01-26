@@ -35,3 +35,17 @@ services:
       - GROUP_ID=group-id
     depends_on:
       - kafka
+  worker:
+    container_name: 'worker'
+    image: 'node:latest'
+    build:
+      context: ./consumer/
+      dockerfile: Dockerfile
+    entrypoint: ["node", "consumer.js"]
+    environment:
+      - KAFKA_BITNAMI_SERVER=kafka:9092
+      - TOPIC=prueba-topic
+      - HOOK_SECRET=supersecretstring
+      - GROUP_ID=group-id
+    depends_on:
+      - kafka

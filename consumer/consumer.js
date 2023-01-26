@@ -3,8 +3,6 @@ const kafka = require('./kafka')
 const consumer = kafka.consumer({
    groupId: process.env.GROUP_ID
 })
-const { IncomingWebhook } = require('@slack/webhook')
-const slack = new IncomingWebhook(process.env.SLACK_INCOMING_WEBHOOK_URL);
 
 
 const main = async () => {
@@ -15,23 +13,14 @@ const main = async () => {
    })
    await consumer.run({
       eachMessage: async ({ topic, partition, message }) => {
-         console.log('Received message', {
-            topic,
-            partition,
-            key: message.key.toString(),
-            value: message.value.toString()
-         })
+         // console.log('Received message', {
+         //    topic,
+         //    partition,
+         //    key: message.key.toString(),
+         //    value: message.value.toString()
+         // })
 
-        // Remember that we need to deserialize the message value back into a Javascript object
-        // by using JSON.parse on the stringified value.
-        const { package, version } = JSON.parse(message.value.toString());
-
-        const text = `:package: ${package}@${version} released\n&lt;https://www.npmjs.com/package/${package}/v/${version}|Check it out on NPM&gt;`;
-        await slack.send({
-        text,
-        username: 'Package bot',
-        });
-         
+         console.log(message)
       }
    })
 }
