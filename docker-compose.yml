@@ -54,12 +54,16 @@ services:
     container_name: 'keycloak'
     ports:
       - "8080:8080"
+    volumes:
+      - ./keycloak/imports:/opt/keycloak/data/import
     environment:
       - KEYCLOAK_ADMIN=admin 
       - KEYCLOAK_ADMIN_PASSWORD=admin
+      - KEYCLOAK_IMPORT=/opt/keycloak/data/import/main-realm.json
       - KAFKA_BITNAMI_SERVER=kafka:9092
       - TOPIC=prueba-topic
       - HOOK_SECRET=supersecretstring
       - GROUP_ID=group-id
-    command:
-      - start-dev
+    entrypoint: "/opt/keycloak/bin/kc.sh start-dev --import-realm"
+
+
