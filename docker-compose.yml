@@ -25,29 +25,29 @@ services:
     ports:
       - '49160:3000'
     build:
-      context: ./server/
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: Dockerfile_Server
     entrypoint: ["node", "server.js"]
     environment:
       - KAFKA_BITNAMI_SERVER=kafka:9092
       - TOPIC_PRODUCER=mensaje-server
       - TOPIC_CONSUMER=mensaje-consumer
       - HOOK_SECRET=supersecretstring
-      - GROUP_ID=group-id
+      - GROUP_ID=proyecto-git-server
     depends_on:
       - kafka
-  worker:
-    container_name: 'worker'
+  consumer:
+    container_name: 'consumer'
     image: 'node:latest'
     build:
-      context: ./consumer/
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: Dockerfile_Consumer
     entrypoint: ["node", "consumer.js"]
     environment:
       - KAFKA_BITNAMI_SERVER=kafka:9092
       - TOPIC_PRODUCER=mensaje-consumer
       - TOPIC_CONSUMER=mensaje-server
       - HOOK_SECRET=supersecretstring
-      - GROUP_ID=group-id
+      - GROUP_ID=proyecto-git-consumer
     depends_on:
       - kafka

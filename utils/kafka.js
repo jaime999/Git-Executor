@@ -8,9 +8,7 @@ const ssl = !!sasl
 // the environment variable KAFKA_BOOTSTRAP_SERVER
 const kafka = new Kafka({
    clientId: 'proyecto-git',
-   brokers: [process.env.KAFKA_BITNAMI_SERVER],
-   ssl,
-   sasl
+   brokers: [process.env.KAFKA_BITNAMI_SERVER]
 })
 
 module.exports = kafka

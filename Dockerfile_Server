@@ -6,15 +6,15 @@ FROM node
 # Install app dependencies
 # A wildcard is used to ensure both package.json AND package-lock.json are copied
 # where available (npm@5+)
-COPY package*.json ./
+COPY utils/package*.json ./
 
 RUN npm install
 # If you are building your code for production
 # RUN npm ci --only=production
 
 # Bundle app source
-COPY ./consumer.js /consumer.js
-COPY ./kafka.js /kafka.js
+COPY server/server.js /server.js
+COPY utils/kafka.js /kafka.js
 
 EXPOSE 3000
-CMD [ "node", "consumer.js" ]
+CMD [ "node", "server.js" ]
