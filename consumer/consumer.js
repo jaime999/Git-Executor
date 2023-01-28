@@ -12,45 +12,24 @@ const main = async () => {
       topic: process.env.TOPIC_CONSUMER,
       fromBeginning: true
    })
-   await consumer.run({
+   await producer.connect()
+   console.log('Environment de consumer', process.env)
+   consumer.run({
       eachMessage: async ({ topic, partition, message }) => {
-         console.log(message.timestamp)
-         const messageValue = message.value.toString()
-         const JSONmessageValue = JSON.parse(messageValue);
-         let code = shell.exec(`git clone https://github.com/jaime999/${JSONmessageValue.repository}.git`);
-         if (code > 0) {
-            console.error('Error en la clonación')
-         }
-
-         shell.cd(JSONmessageValue.repository)
-         shell.exec('ls');
-
-         const aux = shell.exec(JSONmessageValue.command).toString()
-         console.log(`El valor es... ${aux}`)
-         await producer.connect()
          try {
-            await producer.send({
-               topic: process.env.TOPIC_PRODUCER,
-               messages: [{
-                  // Name of the published package as key, to make sure that we process events in order
-                  // The message value is just bytes to Kafka, so we need to serialize our JavaScript
-                  // object to a JSON string. Other serialization methods like Avro are available.
-                  value: JSON.stringify({
-                     result: aux,
-                     timeStamp: message.timestamp
-                  })
-               }]
-            })
-         } catch (error) {
-            console.error('Error publishing message', error)
-         }
+            console.log('El value es', message)
+            const JSONmessageValue = JSON.parse(message.value);
+            shell.exec(`git clone https://github.com/${JSONmessageValue.userRepository}/${JSONmessageValue.repository}.git`);
 
-         console.log('Received message', {
-            topic,
-            partition,
-            // key: message.key.toString(),
-            value: message.value.toString()
-         })
+            shell.cd(JSONmessageValue.repository)
+            shell.exec('ls');
+
+            const aux = shell.exec(JSONmessageValue.command).toString().replace('\n', '')
+            sendMessage({result: aux, timeStamp: message.timestamp})
+         } catch (error) {
+            console.log('Eror al procesar mensaje en el consumer')
+            sendMessage({result: error, timeStamp: message.timestamp})
+         }
       }
    })
 }
@@ -64,3 +43,16 @@ main().catch(async error => {
    }
    process.exit(1)
 })
+
+const sendMessage = async (value) => {
+   console.log('El valor es', value)
+   await producer.send({
+      topic: process.env.TOPIC_PRODUCER,
+      messages: [{
+         // Name of the published package as key, to make sure that we process events in order
+         // The message value is just bytes to Kafka, so we need to serialize our JavaScript
+         // object to a JSON string. Other serialization methods like Avro are available.
+         value: JSON.stringify(value)
+      }]
+   })
+}
