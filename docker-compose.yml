@@ -37,7 +37,6 @@ services:
     depends_on:
       - kafka
   consumer:
-    container_name: 'consumer'
     image: 'node:latest'
     build:
       context: .
