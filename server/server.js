@@ -1,11 +1,12 @@
 require('dotenv').config()
 const express = require('express')
 const bodyParser = require('body-parser')
-const kafka = require('./kafka')        // ++
-const producer = kafka.producer()       // ++
+const kafka = require('./kafka')
+const producer = kafka.producer()
 const app = express()
 const port = 3000
 const jsonParser = bodyParser.json()
+const jobsSubmitted = []
 
 const consumer = kafka.consumer({
    groupId: process.env.GROUP_ID
@@ -19,38 +20,55 @@ const main = async () => {
    await producer.connect()
    consumer.run({
       eachMessage: async ({ topic, partition, message }) => {
-         console.log('Received message', {
+         console.log('Mensaje recibido', {
             topic,
             partition,
             value: message.value.toString()
-         })         
+         })
       }
    })
-   
-   app.post('/', jsonParser, async (req, res) => {      
+
+   app.post('/', jsonParser, async (req, res) => {
       try {
-       await producer.send({
-          topic: process.env.TOPIC_PRODUCER,
-          messages: [{
-             // Name of the published package as key, to make sure that we process events in order
-             // The message value is just bytes to Kafka, so we need to serialize our JavaScript
-             // object to a JSON string. Other serialization methods like Avro are available.  
-             value: JSON.stringify({
-                repository: req.body.repository,
-                command: req.body.command,
-                userRepository: req.body.userRepository
-             })
-          }]
-       })       
-    } catch (error) {
-       console.error('Error publishing message', error)
-    }
-      res.send('Hello World!')
-    })
-    
-    app.listen(port, () => {
+         console.log('Enviando mensaje...')
+         jobsSubmitted.push(JSON.stringify(req.body))
+         await producer.send({
+            topic: process.env.TOPIC_PRODUCER,
+            messages: [{
+               // Name of the published package as key, to make sure that we process events in order
+               // The message value is just bytes to Kafka, so we need to serialize our JavaScript
+               // object to a JSON string. Other serialization methods like Avro are available.  
+               value: JSON.stringify({
+                  repository: req.body.repository,
+                  command: req.body.command,
+                  userRepository: req.body.userRepository,
+                  passwordRepository: req.body.passwordRepository
+               })
+            }]
+         })
+         const { state } = await consumer.describeGroup()
+         console.log('El estado del consumer es', state)
+         // await consumer.run({
+         //    eachMessage: async ({ topic, partition, message }) => {
+         //       const value = JSON.parse(message.value)
+         //       console.log(value)
+         //       const elapsedTime = message.timestamp - value.timeStampConsumer
+         //       res.send(`Respuesta recibida. El resultado es ${value.result}\nEl ElapsedTime es ${elapsedTime} milisegundos`)
+         //    }
+         // })
+      } catch (error) {
+         console.error('Error publishing message', error)
+      }
+      res.send('Respuesta recibida')
+   })
+
+   app.get('/jobs', () => {
+      res.send(`Se han enviado los siguientes trabajos:\n${jobsSubmitted}`)
+   })
+
+   app.listen(port, () => {
       console.log(`API Server listening in port ${port}`)
-    })
+   })
 }
 
 main().catch(async error => {
