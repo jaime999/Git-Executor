@@ -48,5 +48,6 @@ services:
       - TOPIC_CONSUMER=mensaje-server
       - HOOK_SECRET=supersecretstring
       - GROUP_ID=proyecto-git-consumer
+      - CONSUMERS_NUMBER=2
     depends_on:
       - kafka
