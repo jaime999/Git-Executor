@@ -20,12 +20,18 @@ const main = async () => {
          try {
             console.log('El value es', message)
             const JSONmessageValue = JSON.parse(message.value)
+            let result = ''
             if(JSONmessageValue.passwordRepository) {
-               shell.exec(`git clone https://${JSONmessageValue.userRepository}:${JSONmessageValue.passwordRepository}@github.com/${JSONmessageValue.userRepository}/${JSONmessageValue.repository}.git`)
+               result = shell.exec(`git clone https://${JSONmessageValue.userRepository}:${JSONmessageValue.passwordRepository}@github.com/${JSONmessageValue.userRepository}/${JSONmessageValue.repository}.git`)
             }
 
             else {
-               shell.exec(`git clone https://github.com/${JSONmessageValue.userRepository}/${JSONmessageValue.repository}.git`)
+               result = shell.exec(`git clone https://github.com/${JSONmessageValue.userRepository}/${JSONmessageValue.repository}.git`)
+            }
+            
+            if (result.code > 0) {
+               sendMessage({result: result.stderr.replace('\n', '')})
+               return
             }
 
             shell.cd(JSONmessageValue.repository)
