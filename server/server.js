@@ -20,10 +20,11 @@ const main = async () => {
    await producer.connect()
    consumer.run({
       eachMessage: async ({ topic, partition, message }) => {
+         const messageValue = JSON.parse(message.value)
+         const elapsedTime = message.timestamp - messageValue.timeStamp
          console.log('Mensaje recibido', {
-            topic,
-            partition,
-            value: message.value.toString()
+            result: messageValue.result,
+            elapsedTime
          })
       }
    })
@@ -59,7 +60,7 @@ const main = async () => {
       } catch (error) {
          console.error('Error publishing message', error)
       }
-      res.send('Respuesta recibida')
+      res.send('Mensaje enviado')
    })
 
    app.get('/jobs', () => {
