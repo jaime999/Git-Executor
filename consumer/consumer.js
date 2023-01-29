@@ -15,16 +15,19 @@ const main = async () => {
    await producer.connect()
    console.log('Environment de consumer', process.env)
    consumer.run({
+      partitionsConsumedConcurrently: process.env.CONSUMERS_NUMBER,
       eachMessage: async ({ topic, partition, message }) => {
          try {
             console.log('El value es', message)
-            const JSONmessageValue = JSON.parse(message.value);
-            shell.exec(`git clone https://github.com/${JSONmessageValue.userRepository}/${JSONmessageValue.repository}.git`);
+            const JSONmessageValue = JSON.parse(message.value)
+            shell.exec(`git clone https://github.com/${JSONmessageValue.userRepository}/${JSONmessageValue.repository}.git`)
 
             shell.cd(JSONmessageValue.repository)
-            shell.exec('ls');
-
             const aux = shell.exec(JSONmessageValue.command).toString().replace('\n', '')
+            
+            shell.cd('..')
+            shell.exec(`rm -r ${JSONmessageValue.repository}`)
+            shell.exec('ls')
             sendMessage({result: aux, timeStamp: message.timestamp})
          } catch (error) {
             console.log('Eror al procesar mensaje en el consumer')
