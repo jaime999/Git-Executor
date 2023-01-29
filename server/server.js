@@ -28,15 +28,13 @@ const main = async () => {
    })
    
    app.post('/', jsonParser, async (req, res) => {      
-      console.log('Esto es el body', req.body)             // ++
       try {
-       console.log('Environment de server', process.env)
        await producer.send({
           topic: process.env.TOPIC_PRODUCER,
           messages: [{
              // Name of the published package as key, to make sure that we process events in order
              // The message value is just bytes to Kafka, so we need to serialize our JavaScript
-             // object to a JSON string. Other serialization methods like Avro are available.
+             // object to a JSON string. Other serialization methods like Avro are available.  
              value: JSON.stringify({
                 repository: req.body.repository,
                 command: req.body.command,
