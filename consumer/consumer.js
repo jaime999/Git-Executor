@@ -20,13 +20,19 @@ const main = async () => {
          try {
             console.log('El value es', message)
             const JSONmessageValue = JSON.parse(message.value)
-            shell.exec(`git clone https://github.com/${JSONmessageValue.userRepository}/${JSONmessageValue.repository}.git`)
+            if(JSONmessageValue.passwordRepository) {
+               shell.exec(`git clone https://${JSONmessageValue.userRepository}:${JSONmessageValue.passwordRepository}@github.com/${JSONmessageValue.userRepository}/${JSONmessageValue.repository}.git`)
+            }
+
+            else {
+               shell.exec(`git clone https://github.com/${JSONmessageValue.userRepository}/${JSONmessageValue.repository}.git`)
+            }
 
             shell.cd(JSONmessageValue.repository)
             const aux = shell.exec(JSONmessageValue.command).toString().replace('\n', '')
             
             shell.cd('..')
-            shell.exec(`rm -r ${JSONmessageValue.repository}`)
+            shell.rm('-r', JSONmessageValue.repository)
             shell.exec('ls')
             sendMessage({result: aux, timeStamp: message.timestamp})
          } catch (error) {
