@@ -34,6 +34,9 @@ services:
       - TOPIC_JOB_RESULT=job-result
       - TOPIC_JOB_STATUS=job-status
       - KEYCLOAK_SERVER=http://keycloak:8080
+      - KEYCLOAK_CLIENT_SECRET=TREsL7e4ZzMfr2BB0ofDuztv691fBSP5
+      - KEYCLOAK_CLIENT_ID=server
+      - KEYCLOAK_REALM=my_realm
       - HOOK_SECRET=supersecretstring
       - GROUP_ID=proyecto-git-server
     depends_on:
