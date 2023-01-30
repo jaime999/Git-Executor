@@ -30,8 +30,9 @@ services:
     entrypoint: ["node", "server.js"]
     environment:
       - KAFKA_BITNAMI_SERVER=kafka:9092
-      - TOPIC_PRODUCER=mensaje-server
-      - TOPIC_CONSUMER=mensaje-consumer
+      - TOPIC_JOB_SENDED=job-send
+      - TOPIC_JOB_RESULT=job-result
+      - TOPIC_JOB_STATUS=job-status
       - HOOK_SECRET=supersecretstring
       - GROUP_ID=proyecto-git-server
     depends_on:
@@ -44,8 +45,9 @@ services:
     entrypoint: ["node", "consumer.js"]
     environment:
       - KAFKA_BITNAMI_SERVER=kafka:9092
-      - TOPIC_PRODUCER=mensaje-consumer
-      - TOPIC_CONSUMER=mensaje-server
+      - TOPIC_JOB_RECEIVED=job-send
+      - TOPIC_JOB_RESULT=job-result
+      - TOPIC_JOB_STATUS=job-status
       - HOOK_SECRET=supersecretstring
       - GROUP_ID=proyecto-git-consumer
       - CONSUMERS_NUMBER=2

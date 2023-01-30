@@ -9,7 +9,7 @@ const producer = kafka.producer()
 const main = async () => {
    await consumer.connect()
    await consumer.subscribe({
-      topic: process.env.TOPIC_CONSUMER,
+      topic: process.env.TOPIC_JOB_RECEIVED,
       fromBeginning: true
    })
    await producer.connect()
@@ -17,6 +17,7 @@ const main = async () => {
       partitionsConsumedConcurrently: process.env.CONSUMERS_NUMBER,
       eachMessage: async ({ topic, partition, message }) => {
          try {
+            sendMessage({key: message.key.toString()}, process.env.TOPIC_JOB_STATUS)
             const JSONmessageValue = JSON.parse(message.value)
             let result = ''
             if(JSONmessageValue.passwordRepository) {
@@ -28,7 +29,7 @@ const main = async () => {
             }
             
             if (result.code > 0) {
-               sendMessage({result: result.stderr.replace('\n', '')})
+               sendMessage({key: message.key.toString(), result: result.stderr.replace('\n', '')}, process.env.TOPIC_JOB_RESULT)
                return
             }
 
@@ -38,10 +39,10 @@ const main = async () => {
             shell.cd('..')
             shell.rm('-r', JSONmessageValue.repository)
             shell.exec('ls')
-            sendMessage({key: message.key.toString(), result, timeStamp: message.timestamp})
+            sendMessage({key: message.key.toString(), result, timeStamp: message.timestamp}, process.env.TOPIC_JOB_RESULT)
          } catch (error) {
             console.log('Error al procesar mensaje en el consumer')
-            sendMessage({result: error, timeStamp: message.timestamp})
+            sendMessage({key: message.key.toString(), result: error, timeStamp: message.timestamp}, process.env.TOPIC_JOB_RESULT)
          }
       }
    })
@@ -57,10 +58,10 @@ main().catch(async error => {
    process.exit(1)
 })
 
-const sendMessage = async (value) => {
+const sendMessage = async (value, topic) => {
    console.log('El valor es', value)
    await producer.send({
-      topic: process.env.TOPIC_PRODUCER,
+      topic,
       messages: [{
          // Name of the published package as key, to make sure that we process events in order
          // The message value is just bytes to Kafka, so we need to serialize our JavaScript

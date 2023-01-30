@@ -17,20 +17,26 @@ const consumer = kafka.consumer({
 const main = async () => {
    await consumer.connect()
    await consumer.subscribe({
-      topic: process.env.TOPIC_CONSUMER
+      topics: [process.env.TOPIC_JOB_RESULT, process.env.TOPIC_JOB_STATUS]
    })
    await producer.connect()
    consumer.run({
       eachMessage: async ({ topic, partition, message }) => {
          const messageValue = JSON.parse(message.value)
-         const elapsedTime = message.timestamp - messageValue.timeStamp
-         resultsReceived.push({key:messageValue.key, result: messageValue.result, elapsedTime })
-         console.log('Trabajo recibido', {
-            topic,
-            partition,
-            result: messageValue.result,
-            elapsedTime
-         })
+         let keyResult = resultsReceived.find(x => x.key === messageValue.key);
+         if(topic == process.env.TOPIC_JOB_RESULT) {            
+            const elapsedTime = message.timestamp - messageValue.timeStamp
+            keyResult.result = messageValue.result
+            keyResult.elapsedTime = elapsedTime
+            keyResult.status = 'Finalizado'
+            console.log('Trabajo recibido', keyResult)
+
+            return
+         }
+
+         if(topic == process.env.TOPIC_JOB_STATUS && keyResult.status == 'Enviado') {
+            keyResult.status = 'Procesando'
+         }
       }
    })
 
@@ -40,7 +46,7 @@ const main = async () => {
          jobsSubmitted.push(JSON.stringify(req.body))
          const key = uuidv4()
          await producer.send({
-            topic: process.env.TOPIC_PRODUCER,
+            topic: process.env.TOPIC_JOB_SENDED,
             messages: [{
                key,
                value: JSON.stringify({
@@ -51,7 +57,7 @@ const main = async () => {
                })
             }]
          })
-
+         resultsReceived.push({key, status:'Enviado' })
          res.send(`Trabajo enviado. ID asignada: ${key}`)
 
       } catch (error) {
@@ -61,12 +67,23 @@ const main = async () => {
 
    app.post('/result', jsonParser, async (req, res) => {
       const keyResult = resultsReceived.find(x => x.key === req.body.key);
-      if(keyResult) {
+      if(keyResult && keyResult.status == 'Finalizado') {
          res.send(`El resultado es ${keyResult.result}\nEl trabajo ha tardado en total ${keyResult.elapsedTime} milisegundos`)
       }
 
       else {
-         res.send(`El trabajo con ID ${req.body.key} aún no se ha enviado, o no ha llegado`)
+         res.send(`El trabajo con ID ${req.body.key} no ha sido enviado, o aun no ha finalizado`)
+      }
+   })
+
+   app.post('/status', jsonParser, async (req, res) => {
+      const keyResult = resultsReceived.find(x => x.key === req.body.key);
+      if(keyResult) {
+         res.send(`El trabajo se encuentra en estado ${keyResult.status}`)
+      }
+
+      else {
+         res.send(`El trabajo con ID ${req.body.key} no ha sido enviado`)
       }
    })
 
