@@ -13,7 +13,7 @@ RUN npm install
 # RUN npm ci --only=production
 
 # Bundle app source
-COPY consumer/consumer.js /consumer.js
-COPY utils/kafka.js /kafka.js
+COPY ./consumer/consumer.js /consumer.js
+COPY ./utils/kafka.js /kafka.js
 
 CMD [ "node", "consumer.js" ]

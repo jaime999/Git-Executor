@@ -33,6 +33,7 @@ services:
       - TOPIC_JOB_SENDED=job-send
       - TOPIC_JOB_RESULT=job-result
       - TOPIC_JOB_STATUS=job-status
+      - KEYCLOAK_SERVER=http://keycloak:8080
       - HOOK_SECRET=supersecretstring
       - GROUP_ID=proyecto-git-server
     depends_on:
@@ -53,3 +54,17 @@ services:
       - CONSUMERS_NUMBER=2
     depends_on:
       - kafka
+  keycloak:
+    image: 'quay.io/keycloak/keycloak:latest'
+    container_name: 'keycloak'
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./keycloak/imports:/opt/keycloak/data/import
+    environment:
+      - KEYCLOAK_ADMIN=admin 
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+      - KEYCLOAK_IMPORT=/opt/keycloak/data/import/main-realm.json
+    entrypoint: "/opt/keycloak/bin/kc.sh start-dev --import-realm --debug"
+
+
