@@ -30,6 +30,7 @@ services:
     entrypoint: ["node", "server.js"]
     environment:
       - KAFKA_BITNAMI_SERVER=kafka:9092
+      - KEYCLOAK_SERVER=http://keycloak:8080
       - TOPIC=prueba-topic
       - HOOK_SECRET=supersecretstring
       - GROUP_ID=group-id
@@ -60,10 +61,6 @@ services:
       - KEYCLOAK_ADMIN=admin 
       - KEYCLOAK_ADMIN_PASSWORD=admin
       - KEYCLOAK_IMPORT=/opt/keycloak/data/import/main-realm.json
-      - KAFKA_BITNAMI_SERVER=kafka:9092
-      - TOPIC=prueba-topic
-      - HOOK_SECRET=supersecretstring
-      - GROUP_ID=group-id
-    entrypoint: "/opt/keycloak/bin/kc.sh start-dev --import-realm"
+    entrypoint: "/opt/keycloak/bin/kc.sh start-dev --import-realm --debug"
 
 
