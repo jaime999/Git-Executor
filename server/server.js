@@ -7,7 +7,6 @@ const producer = kafka.producer()
 const app = express()
 const port = 3000
 const jsonParser = bodyParser.json()
-const jobsSubmitted = []
 const resultsReceived = []
 
 const consumer = kafka.consumer({
@@ -40,10 +39,9 @@ const main = async () => {
       }
    })
 
-   app.post('/', jsonParser, async (req, res) => {
+   app.post('/repo', jsonParser, async (req, res) => {
       try {
          console.log('Enviando trabajo...')
-         jobsSubmitted.push(JSON.stringify(req.body))
          const key = uuidv4()
          await producer.send({
             topic: process.env.TOPIC_JOB_SENDED,
