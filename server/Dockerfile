@@ -9,12 +9,15 @@ FROM node
 COPY package*.json ./
 
 RUN npm install
+
+#RUN npm install jsonwebtoken
 # If you are building your code for production
 # RUN npm ci --only=production
 
 # Bundle app source
 COPY ./server.js /server.js
 COPY ./kafka.js /kafka.js
+COPY ./../keycloak/keycloak-config.js /keycloak-config.js
 
 EXPOSE 3000
 CMD [ "node", "server.js" ]
