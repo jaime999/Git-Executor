@@ -2,11 +2,13 @@ require('dotenv').config()
 const express = require('express')
 const bodyParser = require('body-parser')
 const kafka = require('./kafka')
+const {v4: uuidv4,} = require('uuid');
 const producer = kafka.producer()
 const app = express()
 const port = 3000
 const jsonParser = bodyParser.json()
 const jobsSubmitted = []
+const resultsReceived = []
 
 const consumer = kafka.consumer({
    groupId: process.env.GROUP_ID
@@ -22,7 +24,10 @@ const main = async () => {
       eachMessage: async ({ topic, partition, message }) => {
          const messageValue = JSON.parse(message.value)
          const elapsedTime = message.timestamp - messageValue.timeStamp
-         console.log('Mensaje recibido', {
+         resultsReceived.push({key:messageValue.key, result: messageValue.result, elapsedTime })
+         console.log('Trabajo recibido', {
+            topic,
+            partition,
             result: messageValue.result,
             elapsedTime
          })
@@ -31,14 +36,13 @@ const main = async () => {
 
    app.post('/', jsonParser, async (req, res) => {
       try {
-         console.log('Enviando mensaje...')
+         console.log('Enviando trabajo...')
          jobsSubmitted.push(JSON.stringify(req.body))
+         const key = uuidv4()
          await producer.send({
             topic: process.env.TOPIC_PRODUCER,
             messages: [{
-               // Name of the published package as key, to make sure that we process events in order
-               // The message value is just bytes to Kafka, so we need to serialize our JavaScript
-               // object to a JSON string. Other serialization methods like Avro are available.  
+               key,
                value: JSON.stringify({
                   repository: req.body.repository,
                   command: req.body.command,
@@ -47,20 +51,23 @@ const main = async () => {
                })
             }]
          })
-         const { state } = await consumer.describeGroup()
-         console.log('El estado del consumer es', state)
-         // await consumer.run({
-         //    eachMessage: async ({ topic, partition, message }) => {
-         //       const value = JSON.parse(message.value)
-         //       console.log(value)
-         //       const elapsedTime = message.timestamp - value.timeStampConsumer
-         //       res.send(`Respuesta recibida. El resultado es ${value.result}\nEl ElapsedTime es ${elapsedTime} milisegundos`)
-         //    }
-         // })
+
+         res.send(`Trabajo enviado. ID asignada: ${key}`)
+
       } catch (error) {
-         console.error('Error publishing message', error)
+         console.error('Error publicando el trabajo', error)
+      }      
+   })
+
+   app.post('/result', jsonParser, async (req, res) => {
+      const keyResult = resultsReceived.find(x => x.key === req.body.key);
+      if(keyResult) {
+         res.send(`El resultado es ${keyResult.result}\nEl trabajo ha tardado en total ${keyResult.elapsedTime} milisegundos`)
       }
-      res.send('Mensaje enviado')
+
+      else {
+         res.send(`El trabajo con ID ${req.body.key} aún no se ha enviado, o no ha llegado`)
+      }
    })
 
    app.get('/jobs', () => {

@@ -13,12 +13,10 @@ const main = async () => {
       fromBeginning: true
    })
    await producer.connect()
-   console.log('Environment de consumer', process.env)
    consumer.run({
       partitionsConsumedConcurrently: process.env.CONSUMERS_NUMBER,
       eachMessage: async ({ topic, partition, message }) => {
          try {
-            console.log('El value es', message)
             const JSONmessageValue = JSON.parse(message.value)
             let result = ''
             if(JSONmessageValue.passwordRepository) {
@@ -35,14 +33,14 @@ const main = async () => {
             }
 
             shell.cd(JSONmessageValue.repository)
-            const aux = shell.exec(JSONmessageValue.command).toString().replace('\n', '')
+            result = shell.exec(JSONmessageValue.command).toString().replace('\n', '')
             
             shell.cd('..')
             shell.rm('-r', JSONmessageValue.repository)
             shell.exec('ls')
-            sendMessage({result: aux, timeStamp: message.timestamp})
+            sendMessage({key: message.key.toString(), result, timeStamp: message.timestamp})
          } catch (error) {
-            console.log('Eror al procesar mensaje en el consumer')
+            console.log('Error al procesar mensaje en el consumer')
             sendMessage({result: error, timeStamp: message.timestamp})
          }
       }
