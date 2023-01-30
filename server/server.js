@@ -3,11 +3,16 @@ const express = require('express')
 const bodyParser = require('body-parser')
 const kafka = require('./kafka')
 const {v4: uuidv4,} = require('uuid');
+const session = require('express-session');
+const { nextTick } = require('process');
+const keycloak = require('./keycloak-config.js').initKeycloak()
 const producer = kafka.producer()
 const app = express()
 const port = 3000
 const jsonParser = bodyParser.json()
 const resultsReceived = []
+
+var memoryStore = new session.MemoryStore();
 
 const consumer = kafka.consumer({
    groupId: process.env.GROUP_ID
@@ -39,7 +44,15 @@ const main = async () => {
       }
    })
 
-   app.post('/repo', jsonParser, async (req, res) => {
+   app.use(session({
+      secret: 'some secret',
+      resave: false,
+      saveUninitialized: true,
+      store: memoryStore
+    }));
+   app.use(keycloak.middleware())
+
+   app.post('/repo', keycloak.protect('realm:Clientes'), jsonParser, async (req, res) => {
       try {
          console.log('Enviando trabajo...')
          const key = uuidv4()
@@ -63,7 +76,7 @@ const main = async () => {
       }      
    })
 
-   app.post('/result', jsonParser, async (req, res) => {
+   app.post('/result', keycloak.protect('realm:Clientes'), jsonParser, async (req, res) => {
       const keyResult = resultsReceived.find(x => x.key === req.body.key);
       if(keyResult && keyResult.status == 'Finalizado') {
          res.send(`El resultado es ${keyResult.result}\nEl trabajo ha tardado en total ${keyResult.elapsedTime} milisegundos`)
@@ -73,18 +86,17 @@ const main = async () => {
          res.send(`El trabajo con ID ${req.body.key} no ha sido enviado, o aun no ha finalizado`)
       }
    })
+      app.post('/status', keycloak.protect('realm:Clientes'), jsonParser, async (req, res) => {
+         const keyResult = resultsReceived.find(x => x.key === req.body.key);
+         if(keyResult) {
+            res.send(`El trabajo se encuentra en estado ${keyResult.status}`)
+         }
 
-   app.post('/status', jsonParser, async (req, res) => {
-      const keyResult = resultsReceived.find(x => x.key === req.body.key);
-      if(keyResult) {
-         res.send(`El trabajo se encuentra en estado ${keyResult.status}`)
-      }
-
-      else {
-         res.send(`El trabajo con ID ${req.body.key} no ha sido enviado`)
-      }
-   })
-
+         else {
+            res.send(`El trabajo con ID ${req.body.key} no ha sido enviado`)
+         }
+      })
+      
    app.listen(port, () => {
       console.log(`API Server listening in port ${port}`)
    })
