@@ -87,10 +87,6 @@ const main = async () => {
       }
    })
 
-   app.get('/jobs', () => {
-      res.send(`Se han enviado los siguientes trabajos:\n${jobsSubmitted}`)
-   })
-
    app.listen(port, () => {
       console.log(`API Server listening in port ${port}`)
    })
