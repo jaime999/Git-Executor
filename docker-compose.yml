@@ -37,7 +37,6 @@ services:
       - KEYCLOAK_CLIENT_SECRET=TREsL7e4ZzMfr2BB0ofDuztv691fBSP5
       - KEYCLOAK_CLIENT_ID=server
       - KEYCLOAK_REALM=my_realm
-      - HOOK_SECRET=supersecretstring
       - GROUP_ID=proyecto-git-server
     depends_on:
       - kafka
@@ -52,7 +51,6 @@ services:
       - TOPIC_JOB_RECEIVED=job-send
       - TOPIC_JOB_RESULT=job-result
       - TOPIC_JOB_STATUS=job-status
-      - HOOK_SECRET=supersecretstring
       - GROUP_ID=proyecto-git-consumer
       - CONSUMERS_NUMBER=2
     depends_on:
