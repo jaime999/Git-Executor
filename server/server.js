@@ -2,9 +2,8 @@ require('dotenv').config()
 const express = require('express')
 const bodyParser = require('body-parser')
 const kafka = require('./kafka')
-const {v4: uuidv4,} = require('uuid');
+const { v4: uuidv4, } = require('uuid');
 const session = require('express-session');
-const { nextTick } = require('process');
 const keycloak = require('./keycloak-config.js').initKeycloak()
 const producer = kafka.producer()
 const app = express()
@@ -28,7 +27,7 @@ const main = async () => {
       eachMessage: async ({ topic, partition, message }) => {
          const messageValue = JSON.parse(message.value)
          let keyResult = resultsReceived.find(x => x.key === messageValue.key);
-         if(topic == process.env.TOPIC_JOB_RESULT) {            
+         if (topic == process.env.TOPIC_JOB_RESULT) {
             const elapsedTime = message.timestamp - messageValue.timeStamp
             keyResult.result = messageValue.result
             keyResult.elapsedTime = elapsedTime
@@ -38,7 +37,7 @@ const main = async () => {
             return
          }
 
-         if(topic == process.env.TOPIC_JOB_STATUS && keyResult.status == 'Enviado') {
+         if (topic == process.env.TOPIC_JOB_STATUS && keyResult.status == 'Enviado') {
             keyResult.status = 'Procesando'
          }
       }
@@ -49,7 +48,7 @@ const main = async () => {
       resave: false,
       saveUninitialized: true,
       store: memoryStore
-    }));
+   }));
    app.use(keycloak.middleware())
 
    app.post('/repo', keycloak.protect('realm:Clientes'), jsonParser, async (req, res) => {
@@ -68,17 +67,17 @@ const main = async () => {
                })
             }]
          })
-         resultsReceived.push({key, status:'Enviado' })
+         resultsReceived.push({ key, status: 'Enviado' })
          res.send(`Trabajo enviado. ID asignada: ${key}`)
 
       } catch (error) {
          console.error('Error publicando el trabajo', error)
-      }      
+      }
    })
 
    app.post('/result', keycloak.protect('realm:Clientes'), jsonParser, async (req, res) => {
       const keyResult = resultsReceived.find(x => x.key === req.body.key);
-      if(keyResult && keyResult.status == 'Finalizado') {
+      if (keyResult && keyResult.status == 'Finalizado') {
          res.send(`El resultado es ${keyResult.result}\nEl trabajo ha tardado en total ${keyResult.elapsedTime} milisegundos`)
       }
 
@@ -86,17 +85,17 @@ const main = async () => {
          res.send(`El trabajo con ID ${req.body.key} no ha sido enviado, o aun no ha finalizado`)
       }
    })
-      app.post('/status', keycloak.protect('realm:Clientes'), jsonParser, async (req, res) => {
-         const keyResult = resultsReceived.find(x => x.key === req.body.key);
-         if(keyResult) {
-            res.send(`El trabajo se encuentra en estado ${keyResult.status}`)
-         }
+   app.post('/status', keycloak.protect('realm:Clientes'), jsonParser, async (req, res) => {
+      const keyResult = resultsReceived.find(x => x.key === req.body.key);
+      if (keyResult) {
+         res.send(`El trabajo se encuentra en estado ${keyResult.status}`)
+      }
 
-         else {
-            res.send(`El trabajo con ID ${req.body.key} no ha sido enviado`)
-         }
-      })
-      
+      else {
+         res.send(`El trabajo con ID ${req.body.key} no ha sido enviado`)
+      }
+   })
+
    app.listen(port, () => {
       console.log(`API Server listening in port ${port}`)
    })
@@ -106,9 +105,10 @@ main().catch(async error => {
    console.error(error)
    try {
       console.log('Error en el server')
+      await producer.disconnect()
       await consumer.disconnect()
    } catch (e) {
-      console.error('Failed to gracefully disconnect consumer', e)
+      console.error('Failed to gracefully disconnect consumer and producer', e)
    }
    process.exit(1)
 })

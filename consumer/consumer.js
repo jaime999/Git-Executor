@@ -51,9 +51,10 @@ const main = async () => {
 main().catch(async error => {
    console.error(error)
    try {
+      await producer.disconnect()
       await consumer.disconnect()
    } catch (e) {
-      console.error('Failed to gracefully disconnect consumer', e)
+      console.error('Failed to gracefully disconnect consumer and producer', e)
    }
    process.exit(1)
 })
