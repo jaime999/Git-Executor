@@ -16,6 +16,8 @@ import (
     scale: detail: {
       server: hsize: 1
       consumer: hsize: 2
+      keycloak: hsize: 1
+      kafka: hsize: 1
     }
     resilience: 0
   }

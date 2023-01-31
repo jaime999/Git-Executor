@@ -1,13 +1,13 @@
 package component
 
 #Artifact: {
-  ref: name:  "consumer"
+  ref: name:  "kafka"
 
   description: {
 
     srv: {
-      client: {
-        consserver: { protocol: "tcp" }
+      server: {
+        kfk: { protocol: "tcp", port: 9092 }
       }
     }
 
@@ -28,13 +28,13 @@ package component
 
     probe: worker: {
       liveness: {
-        protocol: http : { port: srv.client.consserver.port, path: "/health" }
+        protocol: http : { port: srv.server.kfk.port, path: "/health" }
         startupGraceWindow: { unit: "ms", duration: 30000, probe: true }
         frequency: "medium"
         timeout: 30000  // msec
       }
       readiness: {
-        protocol: http : { port: srv.client.consserver.port, path: "/health" }
+        protocol: http : { port: srv.server.kfk.port, path: "/health" }
         frequency: "medium"
         timeout: 30000 // msec
       }
@@ -43,11 +43,11 @@ package component
     code: {
 
       worker: {
-        name: "consumer"
+        name: "kafka"
 
         image: {
-          hub: { name: "consumer-1", secret: "d17055b0ad973411232fbb229d774dbb61e92aa5304e28ffb88764022b240dd7" }
-          tag: "node:latest"
+          hub: { name: "kfk", secret: "43905e2d3bc8925eedce7878405ef2f8a030545e9966a3a7b17a659cea67aec5" }
+          tag: "bitnami/kafka:latest"
         }
 
         mapping: {
@@ -61,14 +61,12 @@ package component
           }
           env: {
             CONFIG_FILE: value: "/config/config.json"
-            HTTP_SERVER_PORT_ENV: value: "\(srv.client.consserver.port)"
-            KAFKA_BITNAMI_SERVER: value: "kafka:9092"
-            TOPIC_JOB_RECEIVED: value: "job-send"
-            TOPIC_JOB_RESULT: value: "job-result"
-            TOPIC_JOB_STATUS: value: "job-status"
-            HOOK_SECRET: value: "supersecretstring"
-            GROUP_ID: value: "proyecto-git-consumer"
-            CONSUMERS_NUMBER: value: "2"
+            HTTP_SERVER_PORT_ENV: value: "\(srv.server.kfk.port)"
+            KAFKA_BROKER_ID: value: "1"
+            KAFKA_CFG_LISTENERS: value: "PLAINTEXT://:9092"
+            KAFKA_CFG_ADVERTISED_LISTENERS: value: "PLAINTEXT://kafka:9092"
+            KAFKA_CFG_ZOOKEEPER_CONNECT: value: "zookeeper:2181"
+            ALLOW_PLAINTEXT_LISTENER: value: "yes"
           }
         }
 

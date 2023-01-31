@@ -10,7 +10,7 @@ package component
         apiServer: { protocol: "http", port: 49160 }
       }
       client: {
-        evalclient: { protocol: "http" }
+        serverkafka: { protocol: "tcp" }
       }
     }
 
@@ -63,7 +63,17 @@ package component
           }
           env: {
             CONFIG_FILE: value: "/config/config.json"
-            HTTP_SERVER_PORT_ENV: value: "\(srv.server.restapi.port)"
+            HTTP_SERVER_PORT_ENV: value: "\(srv.server.apiServer.port)"
+            KAFKA_BITNAMI_SERVER: value: "kafka:9092"
+            TOPIC_JOB_SENDED: value: "job-send"
+            TOPIC_JOB_RESULT: value: "job-result"
+            TOPIC_JOB_STATUS: value: "job-status"
+            KEYCLOAK_SERVER: value: "http://keycloak:8080"
+            KEYCLOAK_CLIENT_SECRET: value: "TREsL7e4ZzMfr2BB0ofDuztv691fBSP5"
+            KEYCLOAK_CLIENT_ID: value: "server"
+            KEYCLOAK_REALM: value: "my_realm"
+            HOOK_SECRET: value: "supersecretstring"
+            GROUP_ID: value: "proyecto-git-server"
           }
         }
 

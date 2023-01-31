@@ -1,13 +1,13 @@
 package component
 
 #Artifact: {
-  ref: name:  "consumer"
+  ref: name:  "keycloak"
 
   description: {
 
     srv: {
-      client: {
-        consserver: { protocol: "tcp" }
+      server: {
+        keycl: { protocol: "http", port: 8080 }
       }
     }
 
@@ -26,15 +26,15 @@ package component
       bandwidth: { size: 10, unit: "M" }
     }
 
-    probe: worker: {
+    probe: keycloak: {
       liveness: {
-        protocol: http : { port: srv.client.consserver.port, path: "/health" }
+        protocol: http : { port: srv.server.keycl.port, path: "/health" }
         startupGraceWindow: { unit: "ms", duration: 30000, probe: true }
         frequency: "medium"
         timeout: 30000  // msec
       }
       readiness: {
-        protocol: http : { port: srv.client.consserver.port, path: "/health" }
+        protocol: http : { port: srv.server.keycl.port, path: "/health" }
         frequency: "medium"
         timeout: 30000 // msec
       }
@@ -43,11 +43,11 @@ package component
     code: {
 
       worker: {
-        name: "consumer"
+        name: "keycloak"
 
         image: {
-          hub: { name: "consumer-1", secret: "d17055b0ad973411232fbb229d774dbb61e92aa5304e28ffb88764022b240dd7" }
-          tag: "node:latest"
+          hub: { name: "keycloak", secret: "c51d56696663560e0011a65ac438b63b27c993581a295fdd4b468b341b283a55" }
+          tag: "quay.io/keycloak/keycloak:latest"
         }
 
         mapping: {
@@ -61,14 +61,10 @@ package component
           }
           env: {
             CONFIG_FILE: value: "/config/config.json"
-            HTTP_SERVER_PORT_ENV: value: "\(srv.client.consserver.port)"
-            KAFKA_BITNAMI_SERVER: value: "kafka:9092"
-            TOPIC_JOB_RECEIVED: value: "job-send"
-            TOPIC_JOB_RESULT: value: "job-result"
-            TOPIC_JOB_STATUS: value: "job-status"
-            HOOK_SECRET: value: "supersecretstring"
-            GROUP_ID: value: "proyecto-git-consumer"
-            CONSUMERS_NUMBER: value: "2"
+            HTTP_SERVER_PORT_ENV: value: "\(srv.server.keycl.port)"
+            KEYCLOAK_ADMIN: value: "admin"
+            KEYCLOAK_ADMIN_PASSWORD: value: "admin"
+            KEYCLOAK_IMPORT: value: "/opt/keycloak/data/import/main-realm.json"
           }
         }
 

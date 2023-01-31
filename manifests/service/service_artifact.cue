@@ -3,6 +3,8 @@ package service
 import (
   f ".../server:component"
   w ".../consumer:component"
+  ka ".../kafka:component"
+  ke "../keycloak:component"
 )
 
 #Artifact: {
@@ -27,6 +29,8 @@ import (
     role: {
       server: artifact: f.#Artifact
       consumer: artifact: w.#Artifact
+      kafka: artifact: ka.#Artifact
+      keycloak: artifact: ke.#Artifact
     }
 
     // Configuration spread:
@@ -34,6 +38,18 @@ import (
     // parameters
     role: {
       server: {
+        config: {
+          parameter: {}
+          resource: {}
+        }
+      }
+      kafka: {
+        config: {
+          parameter: {}
+          resource: {}
+        }
+      }
+      keycloak: {
         config: {
           parameter: {}
           resource: {}
@@ -61,6 +77,9 @@ import (
       server: {
         lab: { protocol: "http", port: 80 }
       }
+      client:{
+        labk: { protocol:"tcp" }
+      }
     }
 
     // Connectors, providing specific patterns of communication among channels
@@ -72,11 +91,35 @@ import (
   			from: self: "lab"
         to: server: "apiServer": _
       }
-      // FrontEnd -> Worker (LB connector)
-      evalconnector: {
+      // Outside -> keycloak (LB connector)
+      serviceconnector: {
         as: "lb"
-        from: server: "evalclient"
+  			from: self: "lab"
+        to: keycloak: "keycl": _
+      }
+      // FrontEnd -> kafka (LB connector)
+      skafkaconnector: {
+        as: "lb"
+        from: server: "serverkafka"
+        to: kafka: "kfk": _
+      }
+      // kafka -> FrontEnd (LB connector)
+      kafkasconnector: {
+        as: "lb"
+        from: kafka: "kfk"
+        to: server: "serverkafka": _
+      }
+      // kafka -> Worker (LB connector)
+      kafkacconnector: {
+        as: "lb"
+        from: kafka: "kfk"
         to: consumer: "consserver": _
+      }
+      // Worker -> kafka (LB connector)
+      kafkacconnector: {
+        as: "lb"
+        from: consumer: "consserver"
+        to: kafka: "kfk": _
       }
     }
 
