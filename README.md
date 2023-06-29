@@ -1,4 +1,4 @@
-Proyecto realizado para la asignatirau de Sistemas y aplicaciones distribuidas.
+Proyecto realizado para la asignatura de Sistemas y aplicaciones distribuidas.
 
 Servicio que te permite realizar una consulta con un repositorio de GitHub, enviarla a una cola de mensajería Kafka, y clonar y ejecutar un programa al consumirlo.
 
